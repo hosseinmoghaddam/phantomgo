@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -11,7 +12,7 @@ import (
 	"time"
 )
 
-//javascript temp file name
+// javascript temp file name
 const GET_JS_FILE_NAME = "get_jsfile_to_phantom"
 const POST_JS_FILE_NAME = "post_jsfile_to_phantom"
 const DIY_JS_FILE_NAME = "diy_jsfile_to_phantom"
@@ -38,7 +39,7 @@ type Phantom struct {
 	WebrowseParam
 }
 
-//web browse param
+// web browse param
 type WebrowseParam struct {
 	method      string
 	url         string
@@ -52,10 +53,17 @@ type WebrowseParam struct {
 }
 
 func NewPhantom() Phantomer {
+
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(dir)
+
 	phantom := &Phantom{
 		userAgent:     "Mozilla/5.0+(compatible;+Baiduspider/2.0;++http://www.baidu.com/search/spider.html)",
 		pageEncode:    "utf-8",
-		phantomjsPath: GOPATH + "/src/github.com/k4s/phantomgo/phantomjs/phantomjs",
+		phantomjsPath: dir + "/phantomjs",
 	}
 	//if the javascript file is no exist,creat it
 	if !phantom.Exist(GET_JS_FILE_NAME) {
@@ -132,7 +140,7 @@ func (self *Phantom) Download(req Request) (resp *http.Response, err error) {
 	return nil, errors.New("Download error")
 }
 
-//open the url address
+// open the url address
 func (self *Phantom) Open(openArgs ...string) (stdout io.ReadCloser, err error) {
 	cmd := exec.Command(self.phantomjsPath, openArgs...)
 	stdout, err = cmd.StdoutPipe()
@@ -146,7 +154,7 @@ func (self *Phantom) Open(openArgs ...string) (stdout io.ReadCloser, err error) 
 	return stdout, err
 }
 
-//exec javascript
+// exec javascript
 func (self *Phantom) Exec(js string, args ...string) (stdout io.ReadCloser, err error) {
 	file, _ := os.Create(DIY_JS_FILE_NAME)
 	file.WriteString(js)
@@ -166,27 +174,27 @@ func (self *Phantom) Exec(js string, args ...string) (stdout io.ReadCloser, err 
 
 }
 
-//SetUserAgent for example [chrome,firefox,IE..]
+// SetUserAgent for example [chrome,firefox,IE..]
 func (self *Phantom) SetUserAgent(userAgent string) {
 	self.userAgent = userAgent
 }
 
-//SetProxy for example address:port
+// SetProxy for example address:port
 func (self *Phantom) SetProxy(proxy string) {
 	self.proxy = proxy
 }
 
-//SetProxyType for example [http|socks5|none]
+// SetProxyType for example [http|socks5|none]
 func (self *Phantom) SetProxyType(proxyType string) {
 	self.proxyType = proxyType
 }
 
-//SetProxyAuth for example username:password
+// SetProxyAuth for example username:password
 func (self *Phantom) SetProxyAuth(proxyAuth string) {
 	self.proxyAuth = proxyAuth
 }
 
-//set web page decode for example [utf-8|gbk]
+// set web page decode for example [utf-8|gbk]
 func (self *Phantom) SetPageEncode(pageEncode string) {
 	self.pageEncode = pageEncode
 }
@@ -197,8 +205,8 @@ func (self *Phantom) SetPhantomjsPath(name string, filepath string) {
 	self.phantomjsPath = filepath
 }
 
-//创建js临时文件
-//creat temp javascript file
+// 创建js临时文件
+// creat temp javascript file
 func (self *Phantom) CreatJsFile(jsfile string) {
 	if jsfile == "GET" {
 		js := getJs
@@ -212,14 +220,14 @@ func (self *Phantom) CreatJsFile(jsfile string) {
 
 }
 
-//判断js临时文件是否存在
-//Is js file exist
+// 判断js临时文件是否存在
+// Is js file exist
 func (self *Phantom) Exist(filename string) bool {
 	_, err := os.Stat(filename)
 	return err == nil || os.IsExist(err)
 }
 
-//销毁js临时文件
+// 销毁js临时文件
 func (self *Phantom) DestroyJsFile(filename string) {
 	os.Remove(filename)
 }
